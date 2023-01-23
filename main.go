@@ -42,14 +42,14 @@ func (c *Customer) modifyCustomer(ID, Name, Role, Email, Phone string, Contacted
 	c.Contacted = Contacted
 }
 
-//var customers = make(map[string]Customer)
+var customers = make(map[string]Customer)
 
-var customers = map[string]string{
-	"1": "Andy",
-	"2": "Peter",
-	"3": "Gabriella",
-	"4": "Jordy",
-}
+//var customers = map[string]string{
+//	"1": "Andy",
+//	"2": "Peter",
+//	"3": "Gabriella",
+//	"4": "Jordy",
+//}
 
 // getCustomers returns all customers
 func getCustomers(w http.ResponseWriter, r *http.Request) {
@@ -76,19 +76,26 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 func addCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var newEntry map[string]string
+	var newEntry Customer
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
 
-	for k, v := range newEntry {
-		if _, ok := customers[k]; ok {
-			w.WriteHeader(http.StatusConflict)
-		} else {
-			customers[k] = v
-			w.WriteHeader(http.StatusCreated)
-		}
+	if _, ok := customers[newEntry.ID]; ok {
+		w.WriteHeader(http.StatusConflict)
+	} else {
+		customers[newEntry.ID] = newEntry
+		w.WriteHeader(http.StatusCreated)
 	}
+
+	//for k, v := range newEntry {
+	//	if _, exit := customers[k]; exit {
+	//		w.WriteHeader(http.StatusConflict)
+	//	} else {
+	//		customers[k] = v
+	//		w.WriteHeader(http.StatusCreated)
+	//	}
+	//}
 
 	json.NewEncoder(w).Encode(customers)
 }
@@ -98,21 +105,31 @@ func updateCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id := mux.Vars(r)["id"]
 
-	var newEntry map[string]string
+	var newEntry Customer
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
 
+	customer := customers[id]
+
 	if _, ok := customers[id]; ok {
-		for k, v := range newEntry {
-			customers[k] = v
-		}
+		customer.modifyCustomer(newEntry.ID, newEntry.Name, newEntry.Role, newEntry.Email, newEntry.Phone, newEntry.Contacted)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(customers)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(customers)
 	}
+	//if _, ok := customers[id]; ok {
+	//	for k, v := range newEntry {
+	//		customers[k] = v
+	//	}
+	//	w.WriteHeader(http.StatusOK)
+	//	json.NewEncoder(w).Encode(customers)
+	//} else {
+	//	w.WriteHeader(http.StatusNotFound)
+	//	json.NewEncoder(w).Encode(customers)
+	//}
 }
 
 // deleteCustomer deletes a customer
@@ -132,10 +149,10 @@ func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	//ca := createCustomer("1", "Andy", "Developer", "S", "S", true)
-	//cb := createCustomer("2", "Peter", "Developer", "S", "S", true)
-	//customers[ca.ID] = *ca
-	//customers[cb.ID] = *cb
+	ca := createCustomer("1", "Andy", "Developer", "S", "S", true)
+	cb := createCustomer("2", "Peter", "Developer", "S", "S", true)
+	customers[ca.ID] = *ca
+	customers[cb.ID] = *cb
 
 	fileServer := http.FileServer(http.Dir("./static"))
 

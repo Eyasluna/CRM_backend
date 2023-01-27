@@ -56,7 +56,7 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id := mux.Vars(r)["id"]
 
-	if _, ok := customers[id]; ok {
+	if _, exist := customers[id]; exist {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(customers[id])
 	} else {
@@ -74,7 +74,7 @@ func addCustomer(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
 
-	if _, ok := customers[newEntry.ID]; ok {
+	if _, exist := customers[newEntry.ID]; exist {
 		w.WriteHeader(http.StatusConflict)
 	} else {
 		customers[newEntry.ID] = *newEntry
@@ -93,7 +93,7 @@ func updateCustomer(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
 
-	if _, ok := customers[newEntry.ID]; ok {
+	if _, exist := customers[newEntry.ID]; exist {
 		newEntry.modifyCustomer(
 			newEntry.ID,
 			newEntry.Name,
@@ -116,7 +116,7 @@ func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id := mux.Vars(r)["id"]
 
-	if _, ok := customers[id]; ok {
+	if _, exist := customers[id]; exist {
 		delete(customers, id)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(customers)

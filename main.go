@@ -44,13 +44,6 @@ func (c *Customer) modifyCustomer(ID, Name, Role, Email, Phone string, Contacted
 
 var customers = make(map[string]Customer)
 
-//var customers = map[string]string{
-//	"1": "Andy",
-//	"2": "Peter",
-//	"3": "Gabriella",
-//	"4": "Jordy",
-//}
-
 // getCustomers returns all customers
 func getCustomers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -76,7 +69,7 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 func addCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var newEntry Customer
+	var newEntry *Customer
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
@@ -84,18 +77,9 @@ func addCustomer(w http.ResponseWriter, r *http.Request) {
 	if _, ok := customers[newEntry.ID]; ok {
 		w.WriteHeader(http.StatusConflict)
 	} else {
-		customers[newEntry.ID] = newEntry
+		customers[newEntry.ID] = *newEntry
 		w.WriteHeader(http.StatusCreated)
 	}
-
-	//for k, v := range newEntry {
-	//	if _, exit := customers[k]; exit {
-	//		w.WriteHeader(http.StatusConflict)
-	//	} else {
-	//		customers[k] = v
-	//		w.WriteHeader(http.StatusCreated)
-	//	}
-	//}
 
 	json.NewEncoder(w).Encode(customers)
 }
@@ -103,33 +87,28 @@ func addCustomer(w http.ResponseWriter, r *http.Request) {
 // updateCustomer updates a customer info
 func updateCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	id := mux.Vars(r)["id"]
 
-	var newEntry Customer
+	var newEntry *Customer
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
 
-	customer := customers[id]
-
-	if _, ok := customers[id]; ok {
-		customer.modifyCustomer(newEntry.ID, newEntry.Name, newEntry.Role, newEntry.Email, newEntry.Phone, newEntry.Contacted)
+	if _, ok := customers[newEntry.ID]; ok {
+		newEntry.modifyCustomer(
+			newEntry.ID,
+			newEntry.Name,
+			newEntry.Role,
+			newEntry.Email,
+			newEntry.Phone,
+			newEntry.Contacted)
+		customers[newEntry.ID] = *newEntry
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(customers)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(customers)
 	}
-	//if _, ok := customers[id]; ok {
-	//	for k, v := range newEntry {
-	//		customers[k] = v
-	//	}
-	//	w.WriteHeader(http.StatusOK)
-	//	json.NewEncoder(w).Encode(customers)
-	//} else {
-	//	w.WriteHeader(http.StatusNotFound)
-	//	json.NewEncoder(w).Encode(customers)
-	//}
+
 }
 
 // deleteCustomer deletes a customer
@@ -165,6 +144,6 @@ func main() {
 	router.HandleFunc("/customers/{id}", deleteCustomer).Methods("DELETE")
 	router.Handle("/", fileServer)
 
-	fmt.Println("Server is starting on port 3000...")
+	fmt.Println("Server is starting on port 3000, You can access it on http://localhost:3000")
 	log.Fatal(http.ListenAndServe(":3000", router))
 }

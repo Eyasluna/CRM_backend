@@ -15,7 +15,10 @@ var Customers = make(map[string]cs.Customer)
 func GetCustomers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(Customers)
+	err := json.NewEncoder(w).Encode(Customers)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetCustomer returns a single customer
@@ -25,10 +28,13 @@ func GetCustomer(w http.ResponseWriter, r *http.Request) {
 
 	if _, exist := Customers[id]; exist {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(Customers[id])
+		err := json.NewEncoder(w).Encode(Customers[id])
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(Customers)
+		http.Error(w, "Customer not found", http.StatusNotFound)
 	}
 }
 
@@ -39,7 +45,10 @@ func AddCustomer(w http.ResponseWriter, r *http.Request) {
 	var newEntry *cs.Customer
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, &newEntry)
+	err := json.Unmarshal(reqBody, &newEntry)
+	if err != nil {
+		panic(err)
+	}
 
 	if _, exist := Customers[newEntry.ID]; exist {
 		w.WriteHeader(http.StatusConflict)
@@ -48,18 +57,23 @@ func AddCustomer(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	json.NewEncoder(w).Encode(Customers)
+	err = json.NewEncoder(w).Encode(Customers)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // UpdateCustomer updates a customer info
 func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	//var newEntry *cs.Customer
 	newEntry := new(cs.Customer)
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, &newEntry)
+	err := json.Unmarshal(reqBody, &newEntry)
+	if err != nil {
+		panic(err)
+	}
 
 	if _, exist := Customers[newEntry.ID]; exist {
 		newEntry.ModifyCustomer(
@@ -71,10 +85,16 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 			newEntry.Contacted)
 		Customers[newEntry.ID] = *newEntry
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(Customers)
+		err := json.NewEncoder(w).Encode(Customers)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(Customers)
+		err := json.NewEncoder(w).Encode(Customers)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 }
@@ -87,9 +107,15 @@ func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 	if _, exist := Customers[id]; exist {
 		delete(Customers, id)
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(Customers)
+		err := json.NewEncoder(w).Encode(Customers)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(Customers)
+		err := json.NewEncoder(w).Encode(Customers)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
